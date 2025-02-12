@@ -53,7 +53,7 @@ class CATSegHead(nn.Module):
             ),
         }
 
-    def forward(self, features, guidance_features, prompt=None, gt_cls=None):
+    def forward(self, features, guidance_features, visible_feat=None, prompt=None, gt_cls=None): #remove visible_feat for case1
         """
         Arguments:
             img_feats: (B, C, HW)
@@ -64,4 +64,4 @@ class CATSegHead(nn.Module):
         # print("from CAT SEG HEAD predictor")
         # print(img_feat.shape)
         # print(type(guidance_features))
-        return self.predictor(img_feat, guidance_features, prompt, gt_cls)
+        return self.predictor(img_feat, guidance_features, visible_feat, prompt, gt_cls)

@@ -686,7 +686,7 @@ class Aggregator(nn.Module):
         corr_embed = rearrange(corr_embed, '(B T) () H W -> B T H W', B=B)
         return corr_embed
     
-    def forward(self, img_feats, text_feats, appearance_guidance):
+    def forward(self, img_feats, text_feats, appearance_guidance, tcp_flag=False, training_flag=True):
         """
         Arguments:
             img_feats: (B, C, H, W)
@@ -694,7 +694,9 @@ class Aggregator(nn.Module):
             apperance_guidance: tuple of (B, C, H, W)
         """
         classes = None
-        text_feats = torch.permute(text_feats, (0, 2, 1, 3))   #you need this for case1,case2 but for case3
+        if tcp_flag:
+            if training_flag:
+                text_feats = torch.permute(text_feats, (0, 2, 1, 3))  #no need for og catseg,cocoop case3, but for case1,case2 required
         # print(img_feats.shape)
         # print(text_feats.shape)
         corr = self.correlation(img_feats, text_feats)

@@ -4,7 +4,7 @@ MODEL:
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
   # MASKING_TYPE: "random"
-  # MASKING_RATIO: 55 #[None, 30, 55, 75]
+  MASKING_RATIO: 55 #[None, 30, 55, 75]
   SEM_SEG_HEAD:
     NAME: "CATSegHead"
     IN_FEATURES: ["res2", "res3", "res4"]
@@ -15,7 +15,8 @@ MODEL:
     CLIP_PRETRAINED: "ViT-B/16"
     PROMPT_DEPTH: 0
     PROMPT_LENGTH: 0
-    ENABLE_COCOOP: True #for Cocoop
+    # ENABLE_COCOOP: True #for Cocoop
+    ENABLE_TCP: True
     TP_LENGTH: 4  #for CoOP
     TP_DIM: 512 #for CoOP
     # VISUAL_PROMPT_DEPTH: 0
@@ -37,10 +38,11 @@ MODEL:
     WINDOW_SIZES: 12
     ATTENTION_TYPE: "linear"
     # CLIP_FINETUNE: "prompt" #for catseg based(og) coop
-    CLIP_FINETUNE: "coop" #for coop.py
+    CLIP_FINETUNE: "attention"
+    TCP_FINETUNE: True
+    # COCOOP_FINETUNE: False
   PROMPT_ENSEMBLE_TYPE: "single"
-  #WEIGHTS: "/four_tb/Aditya/catseg_aditya/50K_ck/model_final.pth" 
-  #WEIGHTS: "/scratch/jayant/aditya/CAT-Seg/ck_iter50K/model_final.pth"
+  #WEIGHTS: ""
   #WEIGHTS: "/home/user/jayant/vlm/catseg_aditya/50K_ck/model_final.pth" # 50K checkpoint trained from scratch 
   #WEIGHTS: "MASKING55_FT_30K/model_final.pth" #best performing masking setting
 INPUT:
@@ -55,12 +57,12 @@ INPUT:
   FORMAT: "RGB"
   DATASET_MAPPER_NAME: "mask_former_semantic"
 SOLVER:
-  IMS_PER_BATCH: 4 
+  IMS_PER_BATCH: 4
   LR_SCHEDULER_NAME: WarmupCosineLR
   BASE_LR: 0.0002
   MAX_ITER: 80000
   BACKBONE_MULTIPLIER: 0.0
   CLIP_MULTIPLIER: 0.01
 TEST:
-  EVAL_PERIOD: 5000
+  EVAL_PERIOD: 85000
   

@@ -98,7 +98,7 @@ def add_cat_seg_config(cfg):
     cfg.TEST.SLIDING_WINDOW = False
 
     # INPUT IMAGE MASKING 
-    #cfg.MODEL.MASKING_RATIO = 30
+    cfg.MODEL.MASKING_RATIO = 30
     #cfg.MODEL.MASKING_TYPE = "random"
 
     #CoOp
@@ -106,4 +106,9 @@ def add_cat_seg_config(cfg):
     cfg.MODEL.SEM_SEG_HEAD.TP_DIM = 0
 
     #CoCoop
-    cfg.MODEL.SEM_SEG_HEAD.ENABLE_COCOOP = True
+    #cfg.MODEL.SEM_SEG_HEAD.ENABLE_COCOOP = True
+    #cfg.MODEL.SEM_SEG_HEAD.COCOOP_FINETUNE = True
+
+    #TCP
+    cfg.MODEL.SEM_SEG_HEAD.TCP_FINETUNE = True
+    cfg.MODEL.SEM_SEG_HEAD.ENABLE_TCP = True

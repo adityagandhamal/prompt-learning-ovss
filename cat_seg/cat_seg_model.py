@@ -39,6 +39,7 @@ class CATSeg(nn.Module):
         clip_finetune: str,
         backbone_multiplier: float,
         clip_pretrained: str,
+        tcp_finetune: bool,
     ):
         """
         Args:
@@ -60,6 +61,7 @@ class CATSeg(nn.Module):
         self.test_class_json = test_class_json
 
         self.clip_finetune = clip_finetune
+        self.tcp_finetune = tcp_finetune
         for name, params in self.sem_seg_head.predictor.clip_model.named_parameters():
             if "transformer" in name:
                 if clip_finetune == "prompt":
@@ -77,15 +79,23 @@ class CATSeg(nn.Module):
                 else:
                     params.requires_grad = False
             elif "CoOp" in name:
-                    if clip_finetune == "coop":
-                        params.requires_grad = True
-
-            elif "meta" in name:
+                if self.tcp_finetune:
                     params.requires_grad = True
-
+                else:
+                    params.requires_grad = False
+            elif "tcpencoder" in name:
+                if self.tcp_finetune:
+                    if "attn" in name:
+                        params.requires_grad = True if "in_proj" in name or "out_proj" in name else False
+                    elif "position" in name:
+                        params.requires_grad = True
+                    else:
+                        params.requires_grad = False
+                else:
+                    params.requires_grad = False
             else:
-                params.requires_grad = False
-        #print(wait)
+               params.requires_grad = False
+
         self.sliding_window = sliding_window
         self.clip_resolution = (384, 384) if clip_pretrained == "ViT-B/16" else (336, 336)
 
@@ -116,6 +126,7 @@ class CATSeg(nn.Module):
             "test_class_json": cfg.MODEL.SEM_SEG_HEAD.TEST_CLASS_JSON,
             "sliding_window": cfg.TEST.SLIDING_WINDOW,
             "clip_finetune": cfg.MODEL.SEM_SEG_HEAD.CLIP_FINETUNE,
+            "tcp_finetune": cfg.MODEL.SEM_SEG_HEAD.TCP_FINETUNE,
             "backbone_multiplier": cfg.SOLVER.BACKBONE_MULTIPLIER,
             "clip_pretrained": cfg.MODEL.SEM_SEG_HEAD.CLIP_PRETRAINED,
         }
@@ -145,7 +156,7 @@ class CATSeg(nn.Module):
                     The prediction has shape KxHxW that represents the logits of
                     each class for each pixel.
         """
-        
+
         images = [x["image"].to(self.device) for x in batched_inputs]
 
         if not self.training and self.sliding_window:

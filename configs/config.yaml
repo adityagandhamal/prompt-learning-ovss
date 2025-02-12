@@ -3,7 +3,7 @@ MODEL:
   PIXEL_MEAN: [123.675, 116.280, 103.530]
   PIXEL_STD: [58.395, 57.120, 57.375]
   # MASKING_TYPE: "random"
-  # MASKING_RATIO: 55
+  MASKING_RATIO: 55
   SEM_SEG_HEAD:
     NAME: "CATSegHead"
     IGNORE_VALUE: 255
@@ -11,7 +11,8 @@ MODEL:
     TRAIN_CLASS_JSON: "/four_tb/ADITYA/CAT-Seg/datasets/coco.json"
     TEST_CLASS_JSON: "/four_tb/ADITYA/CAT-Seg/datasets/coco.json"
     CLIP_PRETRAINED: "ViT-L/14@336px"
-    ENABLE_COCOOP: False
+    #ENABLE_COCOOP: False
+    ENABLE_TCP: True
     PROMPT_DEPTH: 0
     PROMPT_LENGTH: 0
     TP_LENGTH: 0
@@ -35,6 +36,8 @@ MODEL:
     WINDOW_SIZES: 12
     ATTENTION_TYPE: "linear"
     CLIP_FINETUNE: "attention"
+    TCP_FINETUNE: True
+    # COCOOP_FINETUNE: False
   PROMPT_ENSEMBLE_TYPE: "imagenet"
 DATASETS:
   TRAIN: ("coco_2017_train_stuff_all_sem_seg",)

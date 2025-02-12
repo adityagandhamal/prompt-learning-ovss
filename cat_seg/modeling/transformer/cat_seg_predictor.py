@@ -46,7 +46,8 @@ class CATSegPredictor(nn.Module):
         tp_length: int,
         tp_dim: int,
         #Cocoop
-        enable_cocoop: bool,
+        #enable_cocoop: bool,
+        enable_tcp: bool,
     ):
         """
         Args:
@@ -78,20 +79,20 @@ class CATSegPredictor(nn.Module):
             self.tokenizer = open_clip.get_tokenizer(name)
         else:
             # for OpenAI models
-            clip_model, clip_preprocess = clip.load(clip_pretrained, device=device, jit=False, enable_cocoop=enable_cocoop, prompt_depth=prompt_depth, prompt_length=prompt_length, tp_length=tp_length, tp_dim=tp_dim)
+            clip_model, clip_preprocess = clip.load(clip_pretrained, device=device, jit=False, enable_tcp=enable_tcp, prompt_depth=prompt_depth, prompt_length=prompt_length, tp_length=tp_length, tp_dim=tp_dim)
     
-        # self.prompt_ensemble_type = prompt_ensemble_type        
+        self.prompt_ensemble_type = prompt_ensemble_type        
 
-        # if self.prompt_ensemble_type == "imagenet_select":
-        #     prompt_templates = imagenet_templates.IMAGENET_TEMPLATES_SELECT
-        # elif self.prompt_ensemble_type == "imagenet":
-        #     prompt_templates = imagenet_templates.IMAGENET_TEMPLATES
-        # elif self.prompt_ensemble_type == "single":
-        #     prompt_templates = ['A photo of a {} in the scene',]
-        # else:
-        #     raise NotImplementedError
+        if self.prompt_ensemble_type == "imagenet_select":
+            prompt_templates = imagenet_templates.IMAGENET_TEMPLATES_SELECT
+        elif self.prompt_ensemble_type == "imagenet":
+            prompt_templates = imagenet_templates.IMAGENET_TEMPLATES
+        elif self.prompt_ensemble_type == "single":
+            prompt_templates = ['A photo of a {} in the scene',]  #you may have to change the template to ['A photo of a {}',]
+        else:
+            raise NotImplementedError
         
-        # self.prompt_templates = prompt_templates
+        self.prompt_templates = prompt_templates
 
         # self.text_features = self.class_embeddings(self.class_texts, prompt_templates, clip_model).permute(1, 0, 2).float()
         # self.text_features_test = self.class_embeddings(self.test_class_texts, prompt_templates, clip_model).permute(1, 0, 2).float()
@@ -115,16 +116,16 @@ class CATSegPredictor(nn.Module):
             window_size=window_sizes,
             attention_type=attention_type,
             #prompt_channel=len(prompt_templates),
-            prompt_channel=1 
+            prompt_channel=1
             )
         self.transformer = transformer
         
         self.tokens = None
         self.cache = None
-        self.enable_cocoop = enable_cocoop
+        self.enable_tcp = enable_tcp
 
     @classmethod
-    def from_config(cls, cfg):
+    def from_config(cls, cfg):#, in_channels, mask_classification):
         ret = {}
 
         ret["train_class_json"] = cfg.MODEL.SEM_SEG_HEAD.TRAIN_CLASS_JSON
@@ -156,25 +157,33 @@ class CATSegPredictor(nn.Module):
         # CoOp
         ret["tp_length"] = cfg.MODEL.SEM_SEG_HEAD.TP_LENGTH
         ret["tp_dim"] = cfg.MODEL.SEM_SEG_HEAD.TP_DIM
-
-        # CoOp
-        ret["enable_cocoop"] = cfg.MODEL.SEM_SEG_HEAD.ENABLE_COCOOP
+        
+        # TCP
+        ret["enable_tcp"] = cfg.MODEL.SEM_SEG_HEAD.ENABLE_TCP
 
         return ret
 
-    def forward(self, x, vis_guidance, prompt=None, gt_cls=None):
+    def forward(self, x, vis_guidance, vis_features=None, prompt=None, gt_cls=None):
         vis = [vis_guidance[k] for k in vis_guidance.keys()][::-1]
         text = self.class_texts if self.training else self.test_class_texts
         text = [text[c] for c in gt_cls] if gt_cls is not None else text
         flag = self.training
-        if self.enable_cocoop:
-            prompted_text = self.clip_model.encode_text_cocoop(x, self.class_texts if self.training else self.test_class_texts)
+        if self.enable_tcp:
+            if flag:
+                simple_text = self.get_text_embeds(text, self.prompt_templates, self.clip_model, prompt)
+                shared_text = self.clip_model.encode_text_tcp(self.class_texts if self.training else self.test_class_texts, texts=simple_text, flag="TCP")
+                shared_text = shared_text.repeat(x.shape[0], 1, 1, 1)
+                out = self.transformer(x, shared_text, vis, tcp_flag=self.enable_tcp, training_flag=flag)
+            else:
+                text = self.get_text_embeds(text, self.prompt_templates, self.clip_model, prompt)
+                text = text.repeat(x.shape[0], 1, 1, 1)
+                out = self.transformer(x, text, vis, tcp_flag=self.enable_tcp, training_flag=flag)
         else:
-            prompted_text = self.clip_model.encode_text(self.class_texts if self.training else self.test_class_texts)
+            text = self.get_text_embeds(text, self.prompt_templates, self.clip_model, prompt)
+            text = text.repeat(x.shape[0], 1, 1, 1)
+            out = self.transformer(x, text, vis, tcp_flag=self.enable_tcp, training_flag=flag)
+            
 
-        prompted_text = prompted_text.repeat(x.shape[0], 1, 1, 1)
-        prompted_text = prompted_text.unsqueeze(2)
-        out = self.transformer(x, prompted_text, vis)
         return out
 
     @torch.no_grad()
