@@ -32,7 +32,7 @@ Following is the list of the Prompt Learning techniques contained in this reposi
    
       - This enhances the generalizability across unseen classes by combining the prior textual knowledge into the finetuned learnable prompts
    
-      - The integration of this technique into CAT-Seg can be found in `class CLIP` of `./catseg/third_party/model_vpt.py` on branch[TCP](https://github.com/adityagandhamal/prompt-learning-ovss/tree/TCP)
+      - The integration of this technique into CAT-Seg can be found in `class CLIP` of `./catseg/third_party/model_vpt.py` on branch [TCP](https://github.com/adityagandhamal/prompt-learning-ovss/tree/TCP)
    
   
 
