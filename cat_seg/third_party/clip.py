@@ -65,7 +65,8 @@ def available_models():
     return list(_MODELS.keys())
 
 
-def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit=True, prompt_depth=0, prompt_length=0, tp_length=0, tp_dim=0):
+def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_available() else "cpu", jit=True, enable_cocoop=True, prompt_depth=0, prompt_length=0, tp_length=0, tp_dim=0):
+
     if name not in _MODELS:
         raise RuntimeError(f"Model {name} not found; available models = {available_models()}")
 
@@ -82,7 +83,7 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     ])
 
     if not jit:
-        model = build_model(model.state_dict(), prompt_depth, prompt_length, tp_length, tp_dim).to(device)
+        model = build_model(model.state_dict(), enable_cocoop, prompt_depth, prompt_length, tp_length, tp_dim).to(device)
         return model, transform
 
     # patch the device names

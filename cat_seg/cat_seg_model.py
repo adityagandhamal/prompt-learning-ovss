@@ -79,10 +79,13 @@ class CATSeg(nn.Module):
             elif "CoOp" in name:
                     if clip_finetune == "coop":
                         params.requires_grad = True
-    
+
+            elif "meta" in name:
+                    params.requires_grad = True
+
             else:
                 params.requires_grad = False
-
+        #print(wait)
         self.sliding_window = sliding_window
         self.clip_resolution = (384, 384) if clip_pretrained == "ViT-B/16" else (336, 336)
 

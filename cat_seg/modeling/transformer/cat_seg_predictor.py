@@ -44,8 +44,9 @@ class CATSegPredictor(nn.Module):
         attention_type: str,
         #CoOp
         tp_length: int,
-        tp_dim: int
-
+        tp_dim: int,
+        #Cocoop
+        enable_cocoop: bool,
     ):
         """
         Args:
@@ -77,7 +78,7 @@ class CATSegPredictor(nn.Module):
             self.tokenizer = open_clip.get_tokenizer(name)
         else:
             # for OpenAI models
-            clip_model, clip_preprocess = clip.load(clip_pretrained, device=device, jit=False, prompt_depth=prompt_depth, prompt_length=prompt_length, tp_length=tp_length, tp_dim=tp_dim)
+            clip_model, clip_preprocess = clip.load(clip_pretrained, device=device, jit=False, enable_cocoop=enable_cocoop, prompt_depth=prompt_depth, prompt_length=prompt_length, tp_length=tp_length, tp_dim=tp_dim)
     
         # self.prompt_ensemble_type = prompt_ensemble_type        
 
@@ -114,15 +115,16 @@ class CATSegPredictor(nn.Module):
             window_size=window_sizes,
             attention_type=attention_type,
             #prompt_channel=len(prompt_templates),
-            prompt_channel=1
+            prompt_channel=1 
             )
         self.transformer = transformer
         
         self.tokens = None
         self.cache = None
+        self.enable_cocoop = enable_cocoop
 
     @classmethod
-    def from_config(cls, cfg):#, in_channels, mask_classification):
+    def from_config(cls, cfg):
         ret = {}
 
         ret["train_class_json"] = cfg.MODEL.SEM_SEG_HEAD.TRAIN_CLASS_JSON
@@ -155,6 +157,8 @@ class CATSegPredictor(nn.Module):
         ret["tp_length"] = cfg.MODEL.SEM_SEG_HEAD.TP_LENGTH
         ret["tp_dim"] = cfg.MODEL.SEM_SEG_HEAD.TP_DIM
 
+        # CoOp
+        ret["enable_cocoop"] = cfg.MODEL.SEM_SEG_HEAD.ENABLE_COCOOP
 
         return ret
 
@@ -162,8 +166,14 @@ class CATSegPredictor(nn.Module):
         vis = [vis_guidance[k] for k in vis_guidance.keys()][::-1]
         text = self.class_texts if self.training else self.test_class_texts
         text = [text[c] for c in gt_cls] if gt_cls is not None else text
-        prompted_text = self.clip_model.encode_text(self.class_texts if self.training else self.test_class_texts)
+        flag = self.training
+        if self.enable_cocoop:
+            prompted_text = self.clip_model.encode_text_cocoop(x, self.class_texts if self.training else self.test_class_texts)
+        else:
+            prompted_text = self.clip_model.encode_text(self.class_texts if self.training else self.test_class_texts)
+
         prompted_text = prompted_text.repeat(x.shape[0], 1, 1, 1)
+        prompted_text = prompted_text.unsqueeze(2)
         out = self.transformer(x, prompted_text, vis)
         return out
 

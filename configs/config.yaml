@@ -11,6 +11,7 @@ MODEL:
     TRAIN_CLASS_JSON: "/four_tb/ADITYA/CAT-Seg/datasets/coco.json"
     TEST_CLASS_JSON: "/four_tb/ADITYA/CAT-Seg/datasets/coco.json"
     CLIP_PRETRAINED: "ViT-L/14@336px"
+    ENABLE_COCOOP: False
     PROMPT_DEPTH: 0
     PROMPT_LENGTH: 0
     TP_LENGTH: 0
@@ -76,3 +77,32 @@ DATALOADER:
   NUM_WORKERS: 8
 VERSION: 2
 CUDNN_BENCHMARK: True
+
+
+# """
+# export DETECTRON2_DATASETS="/home/user/jayant/vlm/catseg_p/datasets"
+# #TEST_DATASETS="dark_zurich_sem_seg_val mhp_v1_sem_seg_test foodseg103_sem_seg_test atlantis_sem_seg_test dram_sem_seg_test isaid_sem_seg_val isprs_potsdam_sem_seg_test_irrg worldfloods_sem_seg_test_irrg floodnet_sem_seg_test uavid_sem_seg_val kvasir_instrument_sem_seg_test chase_db1_sem_seg_test cryonuseg_sem_seg_test paxray_sem_seg_test_lungs paxray_sem_seg_test_bones paxray_sem_seg_test_mediastinum paxray_sem_seg_test_diaphragm corrosion_cs_sem_seg_test deepcrack_sem_seg_test pst900_sem_seg_test zerowaste_sem_seg_test suim_sem_seg_test cub_200_sem_seg_test cwfid_sem_seg_test"
+# TEST_DATASETS="dark_zurich_sem_seg_val mhp_v1_sem_seg_test foodseg103_sem_seg_test atlantis_sem_seg_test dram_sem_seg_test isaid_sem_seg_val isprs_potsdam_sem_seg_test_irrg worldfloods_sem_seg_test_irrg floodnet_sem_seg_test uavid_sem_seg_val kvasir_instrument_sem_seg_test chase_db1_sem_seg_test cryonuseg_sem_seg_test paxray_sem_seg_test_lungs paxray_sem_seg_test_bones paxray_sem_seg_test_mediastinum paxray_sem_seg_test_diaphragm corrosion_cs_sem_seg_test deepcrack_sem_seg_test pst900_sem_seg_test zerowaste_sem_seg_test suim_sem_seg_test cub_200_sem_seg_test cwfid_sem_seg_test"
+
+# # Run experiments
+# for DATASET in $TEST_DATASETS
+# do
+#  #sh /scratch/jayant/Aniruddh/catseg_p/eval.sh /scratch/jayant/Aniruddh/catseg_p/configs/vitl_336.yaml 1 outputs/large/$DATASET MODEL.WEIGHTS /scratch/jayant/Aniruddh/catseg_p/model_large.pth
+#  # python /scratch/jayant/Aniruddh/catseg_p/train_net.py --num-gpus 1 --eval-only --config-file /scratch/jayant/Aniruddh/catseg_p/configs/vitl_336.yaml DATASETS.TEST \(\"$DATASET\",\) MODEL.WEIGHTS /scratch/jayant/Aniruddh/CAT-Seg/model_large.pth OUTPUT_DIR output/
+#  # python /home/user/jayant/vlm/catseg_p/train_net.py --config /home/user/jayant/vlm/catseg_p/configs/vitb_384.yaml \
+#  python CAT-Seg/train_net.py --config CAT-Seg/configs/vitb_384.yaml \
+#  --num-gpus 1 \
+#  --dist-url "auto" \
+#  --eval-only \
+#  OUTPUT_DIR eval_masking30_40K/ \
+#  MODEL.SEM_SEG_HEAD.TEST_CLASS_JSON "/home/user/jayant/vlm/catseg_p/datasets/$DATASET.json" \
+#  DATASETS.TEST \(\"$DATASET\",\)\
+#  TEST.SLIDING_WINDOW "True" \
+#  MODEL.SEM_SEG_HEAD.POOLING_SIZES "[1,1]" \
+#  MODEL.WEIGHTS "ck_masking_scratch_40K/model_final.pth" \
+#  #MODEL.WEIGHTS "./model_0004999.pth" \
+#  #MODEL.WEIGHTS "/home/user/jayant/vlm/catseg_p/model_large.pth" \
+#  $opts
+# done
+
+# """

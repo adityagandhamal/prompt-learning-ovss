@@ -4,9 +4,8 @@ from typing import Tuple, Union
 import torch
 import torch.nn.functional as F
 from torch import nn
-from cat_seg.third_party import clip
-#from clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
-from cat_seg.third_party.simple_tokenizer import SimpleTokenizer 
+
+
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -204,10 +203,8 @@ class ResidualAttentionBlock(nn.Module):
     def forward(self, x: torch.Tensor, prompt=None):
         x = x + self.attention(self.ln_1(x))
         x = x + self.mlp(self.ln_2(x))
-
         if prompt is not None:
             x = torch.cat((x[0:1, :, :], x[prompt + 1: :, :]), dim=0)
-
         return x
 
     def forward_dense(self, x: torch.Tensor, prompt=None):
@@ -231,7 +228,6 @@ class ResidualAttentionBlock(nn.Module):
         
         if prompt is not None:
             v = torch.cat((v[0:1, :, :], v[prompt + 1: :, :]), dim=0)
-
         return v
 
 
@@ -252,13 +248,12 @@ class Transformer(nn.Module):
         for i, resblock in enumerate(self.resblocks):
             if self.prompt_length > 0 and i < self.prompt_depth:
                 x = torch.cat((x[0:1, :, :], self.prompt_tokens[i].repeat(x.shape[1], 1, 1).permute(1, 0, 2) ,x[1:, :, :]))
-                
+            
             if i == self.layers - 1 and dense:
-                x = resblock.forward_dense(x, self.prompt_length)
-   
+                x = resblock.forward_dense(x, self.prompt_length)    
             else:
                 x = resblock(x, self.prompt_length)
-
+            
         return x
 
 
@@ -306,7 +301,6 @@ class VisualTransformer(nn.Module):
         if self.proj is not None:
             x = x @ self.proj
         
-
         return x
 
     def resized_pos_embed(self, in_res, tgt_res, mode="bicubic"):
@@ -324,103 +318,6 @@ class VisualTransformer(nn.Module):
 
         return torch.cat((cls_pos, resized_pos_embed), dim=0)
 
-class MetaNet(nn.Module):
-    def __init__(self, vis_dim, tp_dim):
-        super().__init__()
-        self.conv1 = nn.Conv2d(vis_dim, vis_dim//8, kernel_size=5)  #512, 256, K
-        self.conv2 = nn.Conv2d(vis_dim//8, vis_dim//16, kernel_size=5)
-        self.linear1 = nn.Linear(32*16*16 , 1024)  
-        self.linear2 = nn.Linear(1024, tp_dim)
-        #self.relu = nn.ReLu()
-
-    def forward(self, x):
-        x = self.conv1(x)
-        x = self.conv2(x)
-        x = torch.flatten(x, start_dim=1)
-        x = self.linear1(x)
-        x = F.relu(x)
-        x = self.linear2(x)
-        x = F.relu(x)
-
-        return x
-
-class PromptLearner(nn.Module):
-    def __init__(self, token_embedding, tp_length, tp_dim):
-        super().__init__()
-        n_ctx = tp_length
-        ctx_dim = tp_dim
-        _tokenizer = SimpleTokenizer()
-        ctx_init = "a photo of a"
-        ctx_init = ctx_init.replace("_", " ")
-        n_ctx = len(ctx_init.split(" "))
-        prompt = clip.tokenize(ctx_init)
-        with torch.no_grad():
-            embedding = token_embedding(prompt)
-        ctx_vectors = embedding[0, 1 : 1 + n_ctx, :]
-        self.prompt_prefix = ctx_init
-        # print("Initializing a generic random context")
-        # ctx_vectors = torch.empty(n_ctx, ctx_dim)
-        # nn.init.normal_(ctx_vectors, std=0.02)
-        # self.prompt_prefix = " ".join(["X"] * n_ctx)
-        print(f'Initial context: "{self.prompt_prefix}"')
-        print(f"Number of context words (tokens): {n_ctx}")
-
-        self.ctx = nn.Parameter(ctx_vectors)  # To be optimized
-        self.token_embedding = token_embedding
-
-        # Register buffers for token prefix and suffix (generic placeholders)
-        self.register_buffer("token_prefix", None)  # SOS
-        self.register_buffer("token_suffix", None)  # CLS, EOS
-
-        self.n_ctx = n_ctx
-        self._tokenizer = _tokenizer
-
-    def construct_prompts(self, ctx, prefix, suffix):
-        prompts = torch.cat(
-            [
-                prefix,  # (dim0, 1, dim)
-                ctx,     # (dim0, n_ctx, dim)
-                suffix,  # (dim0, *, dim)
-            ],
-            dim=1,
-        )
-
-        return prompts
-
-    def forward(self, pi, classnames):
-        # Handle dynamic classnames passed into forward
-        classnames = [name.replace("_", " ") for name in classnames]
-        name_lens = [len(self._tokenizer.encode(name)) for name in classnames]
-        prompts = [self.prompt_prefix + " " + name + "." for name in classnames]
-
-        # Tokenize prompts and get embeddings
-        tokenized_prompts = torch.cat([clip.tokenize(p) for p in prompts]).to("cuda")
-        with torch.no_grad():
-            embedding = self.token_embedding(tokenized_prompts)
-
-        # Create token_prefix and token_suffix on the fly
-        self.token_prefix = embedding[:, :1, :]  # SOS
-        self.token_suffix = embedding[:, 1 + self.n_ctx:, :]  # CLS, EOS
-
-        # Update prefix and suffix dynamically in forward
-        ctx = self.ctx
-
-        pi = pi.unsqueeze(1)           # (batch, 1, ctx_dim) #(4, 1, 512)
-
-        ctx = ctx.unsqueeze(0)         # (1, n_ctx, ctx_dim) #(1, 4, 512)
-
-        ctx_conditioned = ctx + pi     # (batch, n_ctx, ctx_dim) #(4, 4, 512) 
-
-        prompts = []
-        for ctx_conditioned_i in ctx_conditioned:
-            ctx_i = ctx_conditioned_i.unsqueeze(0).expand(len(classnames), -1, -1)
-            pts_i = self.construct_prompts(ctx_i, self.token_prefix, self.token_suffix)  # (n_cls, n_tkn, ctx_dim)
-            prompts.append(pts_i)
-        
-        prompts = torch.stack(prompts)
-
-        return prompts, tokenized_prompts
-
 
 class CLIP(nn.Module):
     def __init__(self,
@@ -436,32 +333,17 @@ class CLIP(nn.Module):
                  transformer_width: int,
                  transformer_heads: int,
                  transformer_layers: int,
-                 #coop
-                 enable_cocoop: bool,
-                 # coop
-                 #tokenizer,
-                 #classnames: list, #no. of classes (171 <-- coco)
-                 tp_length: int, #no. of prompts (prompt_length 4...)
-                 tp_dim: int, #prompt dim
+                 # prompt
                  prompt_depth: int=0,
                  prompt_length: int=0,
                  text_prompt: bool=False,
-                 #coop
-                 #classnames: list, #no. of classes (171 <-- coco)
-                 #n_ctx: int, #no. of prompts (prompt_length 4...)
-                 #ctx_init, #prompt initialization  #no need to mention in init of CLIP as it set to random initiialization/xavier
-                 #ctx_dim: int #refer coop as to what exactly it means
                  ):
         super().__init__()
 
         self.context_length = context_length
         
         self.image_resolution = image_resolution
-        
-        self.tp_length = tp_length
-        self.tp_dim = tp_dim
-        self.enable_cocoop = enable_cocoop
-        self.token_embedding = nn.Embedding(vocab_size, transformer_width)
+
 
         if isinstance(vision_layers, (tuple, list)):
             assert prompt_length == 0 and prompt_depth==0
@@ -495,24 +377,8 @@ class CLIP(nn.Module):
             prompt_length=0, #prompt_length,
         )
 
-        if self.tp_length and self.tp_dim:
-            self.CoOp = PromptLearner(
-                #tokenizer=tokenizer,
-                token_embedding = self.token_embedding,
-                #classnames=classnames,
-                tp_length=tp_length,
-                tp_dim=tp_dim,
-            )       
-
-        if self.enable_cocoop:
-            self.meta = MetaNet(
-                 vis_dim=embed_dim,
-                 tp_dim=tp_dim
-            )
-            # self.meta.half()
-
         self.vocab_size = vocab_size
-        #self.token_embedding = nn.Embedding(vocab_size, transformer_width)
+        self.token_embedding = nn.Embedding(vocab_size, transformer_width)
         self.positional_embedding = nn.Parameter(torch.empty(self.context_length, transformer_width))
         self.ln_final = LayerNorm(transformer_width)
 
@@ -541,24 +407,6 @@ class CLIP(nn.Module):
         else:
             return self.visual(image.type(self.dtype), masks.type(self.dtype))
 
-
-    def encode_text_cocoop(self, image_features, classnames): #cocoop changes image_features required to be passed to the meta net
-        
-        pi = self.meta(image_features)  #Define self.meta -> the meta net which takes in image_features and generates pi
-
-        
-        prompts, tokenized_prompts = self.CoOp(pi, classnames) #pass pi to self.coop and do the addition there --> pi+ctx
-
-        x = prompts + self.positional_embedding.type(self.dtype)
-        x = x.permute(1, 0, 2)  # NLD -> LND
-        x = self.transformer(x, prompt=None)
-        x = x.permute(1, 0, 2)  # LND -> NLD
-        x = self.ln_final(x).type(self.dtype)
-
-        x = x[torch.arange(x.shape[0]), tokenized_prompts.argmax(dim=-1)] @ self.text_projection
-
-        return x
-
     def encode_text(self, text, prompt=None):
         #if prompt is not None:
         #import pdb; pdb.set_trace()
@@ -579,7 +427,6 @@ class CLIP(nn.Module):
         return x
 
     def forward(self, image, text):
-
         image_features = self.encode_image(image)
         text_features = self.encode_text(text)
         # import pdb; pdb.set_trace()
@@ -621,7 +468,7 @@ def convert_weights(model: nn.Module):
     model.apply(_convert_weights_to_fp16)
 
 
-def build_model(state_dict: dict, enable_cocoop=False, prompt_depth=0, prompt_length=0, tp_length=0, tp_dim=0):
+def build_model(state_dict: dict, prompt_depth=0, prompt_length=0):
     vit = "visual.proj" in state_dict
 
     if vit:
@@ -645,13 +492,11 @@ def build_model(state_dict: dict, enable_cocoop=False, prompt_depth=0, prompt_le
     transformer_width = state_dict["ln_final.weight"].shape[0]
     transformer_heads = transformer_width // 64
     transformer_layers = len(set(k.split(".")[2] for k in state_dict if k.startswith(f"transformer.resblocks")))
-    #tokenizer = _Tokenizer() 
 
     model = CLIP(
         embed_dim,
         image_resolution, vision_layers, vision_width, vision_patch_size,
         context_length, vocab_size, transformer_width, transformer_heads, transformer_layers,
-        enable_cocoop=enable_cocoop, tp_length=tp_length, tp_dim=tp_dim, #tokenizer=tokenizer,
         prompt_depth=prompt_depth, prompt_length=prompt_length,
     )
 

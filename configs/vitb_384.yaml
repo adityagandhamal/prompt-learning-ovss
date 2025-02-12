@@ -15,7 +15,8 @@ MODEL:
     CLIP_PRETRAINED: "ViT-B/16"
     PROMPT_DEPTH: 0
     PROMPT_LENGTH: 0
-    TP_LENGTH: 8  #for CoOP
+    ENABLE_COCOOP: True #for Cocoop
+    TP_LENGTH: 4  #for CoOP
     TP_DIM: 512 #for CoOP
     # VISUAL_PROMPT_DEPTH: 0
     # VISUAL_PROMPT_LENGTH: 0
@@ -38,6 +39,8 @@ MODEL:
     # CLIP_FINETUNE: "prompt" #for catseg based(og) coop
     CLIP_FINETUNE: "coop" #for coop.py
   PROMPT_ENSEMBLE_TYPE: "single"
+  #WEIGHTS: "/four_tb/Aditya/catseg_aditya/50K_ck/model_final.pth" 
+  #WEIGHTS: "/scratch/jayant/aditya/CAT-Seg/ck_iter50K/model_final.pth"
   #WEIGHTS: "/home/user/jayant/vlm/catseg_aditya/50K_ck/model_final.pth" # 50K checkpoint trained from scratch 
   #WEIGHTS: "MASKING55_FT_30K/model_final.pth" #best performing masking setting
 INPUT:
@@ -52,7 +55,7 @@ INPUT:
   FORMAT: "RGB"
   DATASET_MAPPER_NAME: "mask_former_semantic"
 SOLVER:
-  IMS_PER_BATCH: 4
+  IMS_PER_BATCH: 4 
   LR_SCHEDULER_NAME: WarmupCosineLR
   BASE_LR: 0.0002
   MAX_ITER: 80000

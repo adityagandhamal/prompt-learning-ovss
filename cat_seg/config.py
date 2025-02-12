@@ -104,3 +104,6 @@ def add_cat_seg_config(cfg):
     #CoOp
     cfg.MODEL.SEM_SEG_HEAD.TP_LENGTH = 0
     cfg.MODEL.SEM_SEG_HEAD.TP_DIM = 0
+
+    #CoCoop
+    cfg.MODEL.SEM_SEG_HEAD.ENABLE_COCOOP = True

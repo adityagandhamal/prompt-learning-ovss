@@ -6,7 +6,7 @@ output=$3
 
 export DETECTRON2_DATASETS="/four_tb/ADITYA/CAT-Seg/datasets"
 # gpu_ids="1" # coop
-# # gpu_ids="0" 
+# gpu_ids="0,1" 
 # export CUDA_VISIBLE_DEVICES=$gpu_ids
 
 if [ -z $config ]

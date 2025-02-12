@@ -341,7 +341,8 @@ class AttentionLayer(nn.Module):
             x: B, L, C
             guidance: B, L, C
         """
-
+        # print(x.shape)
+        # print(guidance.shape)
         q = self.q(torch.cat([x, guidance], dim=-1)) if guidance is not None else self.q(x)
         k = self.k(torch.cat([x, guidance], dim=-1)) if guidance is not None else self.k(x)
         v = self.v(x)
@@ -552,6 +553,9 @@ class Up(nn.Module):
         if guidance is not None:
             T = x.size(0) // guidance.size(0)
             guidance = repeat(guidance, "B C H W -> (B T) C H W", T=T)
+            # print("Coming from CAT Aggregator and Guidance")
+            # print(x.shape)
+            # print(guidance.shape)
             x = torch.cat([x, guidance], dim=1)
         return self.conv(x)
 
@@ -655,6 +659,7 @@ class Aggregator(nn.Module):
     def corr_embed(self, x):
         B = x.shape[0]
         corr_embed = rearrange(x, 'B P T H W -> (B T) P H W')
+        # print(x.shape)
         corr_embed = self.conv1(corr_embed)
         corr_embed = rearrange(corr_embed, '(B T) C H W -> B C T H W', B=B)
         return corr_embed
@@ -689,7 +694,7 @@ class Aggregator(nn.Module):
             apperance_guidance: tuple of (B, C, H, W)
         """
         classes = None
-        text_feats = torch.permute(text_feats, (0, 2, 1, 3))
+        text_feats = torch.permute(text_feats, (0, 2, 1, 3))   #you need this for case1,case2 but for case3
         # print(img_feats.shape)
         # print(text_feats.shape)
         corr = self.correlation(img_feats, text_feats)
@@ -703,7 +708,9 @@ class Aggregator(nn.Module):
             text_feats = th_text
             corr = torch.einsum('bchw, btpc -> bpthw', img_feats, th_text)
         #corr = self.feature_map(img_feats, text_feats)
+        # print(corr.shape)
         #corr = torch.permute(corr, (0, 2, 1, 3, 4))
+        #print(kjjk)
         corr_embed = self.corr_embed(corr)
 
         projected_guidance, projected_text_guidance, projected_decoder_guidance = None, None, [None, None]

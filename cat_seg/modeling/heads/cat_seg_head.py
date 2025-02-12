@@ -60,5 +60,8 @@ class CATSegHead(nn.Module):
             guidance_features: (B, C, )
         """
         img_feat = rearrange(features[:, 1:, :], "b (h w) c->b c h w", h=self.feature_resolution[0], w=self.feature_resolution[1])
-
+        # print(from_head_registry)
+        # print("from CAT SEG HEAD predictor")
+        # print(img_feat.shape)
+        # print(type(guidance_features))
         return self.predictor(img_feat, guidance_features, prompt, gt_cls)
