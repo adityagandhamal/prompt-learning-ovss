@@ -14,7 +14,7 @@ Following is the list of the Prompt Learning techniques contained in this reposi
     
   - Conditional Context Optimization [CoCoOp](https://openaccess.thecvf.com/content/CVPR2022/papers/Zhou_Conditional_Prompt_Learning_for_Vision-Language_Models_CVPR_2022_paper.pdf)
 
-    ![CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/cocoop.png)
+    ![CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/cocoop2.png)
 
       - It follows a similar approach as CoOp but the in this case, the context vectors are conditioned on the image features
    
