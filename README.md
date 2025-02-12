@@ -3,7 +3,7 @@
 This repository contains the codebase of prompt learning techniques integrated with [CAT-Seg (CVPR'24)](https://cvlab-kaist.github.io/CAT-Seg/) to adapt the Vision-Language Model CLIP to the downstream task of semantic segmentation in an Open-Vocabulary setting
 
 Following is the list of the Prompt Learning techniques contained in this repository
-  - Context Optimization [CoOp (IJCV'22)](https://link.springer.com/article/10.1007/s11263-022-01653-1)
+  - Context Optimization [CoOp (IJCV'22)](https://link.springer.com/article/10.1007/s11263-022-01653-1) in [main](https://github.com/adityagandhamal/prompt-learning-ovss/tree/main)
 
     ![CoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/coop.png)
 
@@ -12,15 +12,15 @@ Following is the list of the Prompt Learning techniques contained in this reposi
       - Instead of using a vanilla template **_"a photo of a [CLASS]"_**, use learnable context vectors as prompts
           - e.g. **_"X X X X [CLASS]"_**
     
-  - Conditional Context Optimization [CoCoOp (CVPR'22)](https://openaccess.thecvf.com/content/CVPR2022/papers/Zhou_Conditional_Prompt_Learning_for_Vision-Language_Models_CVPR_2022_paper.pdf)
+  - Conditional Context Optimization [CoCoOp (CVPR'22)](https://openaccess.thecvf.com/content/CVPR2022/papers/Zhou_Conditional_Prompt_Learning_for_Vision-Language_Models_CVPR_2022_paper.pdf) in [branch CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/tree/CoCoOP)
 
-    ![CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/cocoop2.png)
+    ![CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/cocoop2.png) 
 
       - It follows a similar approach as CoOp but the in this case, the context vectors are conditioned on the image features
    
       - This augments the learnable prompts with the image context as a prior
     
-  - Textual-based Class-aware Prompt tuning for Visual-Language Model [TCP (CVPR'24)](https://openaccess.thecvf.com/content/CVPR2024/papers/Yao_TCPTextual-based_Class-aware_Prompt_tuning_for_Visual-Language_Model_CVPR_2024_paper.pdf)
+  - Textual-based Class-aware Prompt tuning for Visual-Language Model [TCP (CVPR'24)](https://openaccess.thecvf.com/content/CVPR2024/papers/Yao_TCPTextual-based_Class-aware_Prompt_tuning_for_Visual-Language_Model_CVPR_2024_paper.pdf) in [branch TCP](https://github.com/adityagandhamal/prompt-learning-ovss/tree/TCP)
 
     ![TCP](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/tcp.png)
 
