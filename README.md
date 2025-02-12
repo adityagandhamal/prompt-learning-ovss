@@ -13,6 +13,13 @@ Following is the list of the Prompt Learning techniques contained in this reposi
           - e.g. **_"X X X X [CLASS]"_**
     
   - Conditional Context Optimization [CoCoOp](https://openaccess.thecvf.com/content/CVPR2022/papers/Zhou_Conditional_Prompt_Learning_for_Vision-Language_Models_CVPR_2022_paper.pdf)
+
+    ![CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/blob/main/cocoop.png)
+
+      - It follows a similar approach as CoOp but the in this case, the context vectors are conditioned on the image features
+   
+      - This augments the learnable prompts with the image context as a prior
+    
   - Textual-based Class-aware Prompt tuning for Visual-Language Model [TCP](https://openaccess.thecvf.com/content/CVPR2024/papers/Yao_TCPTextual-based_Class-aware_Prompt_tuning_for_Visual-Language_Model_CVPR_2024_paper.pdf)
 
     
