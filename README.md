@@ -1,6 +1,6 @@
 # Open Vocabulary Segmentation with Prompt Learning
 
-This repository contains the codebase of prompt learning techniques integrated with [CAT-Seg](https://cvlab-kaist.github.io/CAT-Seg/) to adapt the Vision-Language Model CLIP to the downstream task of semantic segmentation in an Open-Vocabulary setting
+This repository contains the codebase of prompt learning techniques integrated with [CAT-Seg (CVPR'24)](https://cvlab-kaist.github.io/CAT-Seg/) to adapt the Vision-Language Model CLIP to the downstream task of semantic segmentation in an Open-Vocabulary setting
 
 Following is the list of the Prompt Learning techniques contained in this repository
   - Context Optimization [CoOp (IJCV'22)](https://link.springer.com/article/10.1007/s11263-022-01653-1)
