@@ -22,7 +22,7 @@ Following is the list of the Prompt Learning techniques contained in this reposi
    
       - This augments the learnable prompts with the image context as a prior
    
-      - The integration of this technique into CAT-Seg can be found in `class CLIP` of `./catseg/third_party/model_vpt.py` on branch [CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/tree/CoCoOp)
+      - The integration of this technique into CAT-Seg can be found in `class CLIP` of `./catseg/third_party/model_vpt.py` on branch [CoCoOp](https://github.com/adityagandhamal/prompt-learning-ovss/tree/CoCoOP)
     
   - Textual-based Class-aware Prompt tuning for Visual-Language Model [TCP (CVPR'24)](https://openaccess.thecvf.com/content/CVPR2024/papers/Yao_TCPTextual-based_Class-aware_Prompt_tuning_for_Visual-Language_Model_CVPR_2024_paper.pdf)
 
